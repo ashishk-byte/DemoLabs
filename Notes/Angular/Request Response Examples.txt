@@ -1,0 +1,133 @@
+REQUEST			GET https://localhost:7123/api/categories/2
+
+RESPONSE 		200 "Ok"
+				{
+					"categoryId": 2,
+					"name": "asdflkjasdflkjasdf asdlfkjasdflkj",
+					"description": null,
+					"createdAtUtc": "2026-02-27T10:00:43.7539779",
+					"modifiedAtUtc": "2026-02-27T10:10:48.3682685",
+					"rowVersion": "AAAAAAAANrU="
+				}
+
+-------------------------------
+
+REQUEST			GET https://localhost:7123/api/categories/
+
+RESPONSE		404 "Not Found"
+
+-------------------------------
+
+REQUEST			GET https://localhost:7123/api/categories/abcd
+
+RESPONSE		404 "Not Found"
+
+-------------------------------
+
+REQUEST			GET https://localhost:7123/api/categories/3
+
+RESPONSE		{
+					"title": "NotFound",
+					"status": 404,
+					"detail": "Category with id '3' was not found.",
+					"instance": "/api/Categories/3"
+				}
+
+--------------------------------------
+
+REQUEST 		POST https://localhost:7123/api/categories/
+				{
+					"name": "",
+					"description": null,
+				}
+
+RESPONSE		400 "Bad Request"
+				{
+					"title": "Validation failed",
+					"status": 400,
+					"detail": "One or more validation errors occurred.",
+					"instance": "/api/Categories",
+					"errors": {
+						"Name": [
+							"Category name is required.",
+							"Category name must be between 2 and 100 characters."
+						]
+					}
+				}
+
+-------------------------------
+
+REQUEST			POST https://localhost:7123/api/categories/
+				{
+					"name": "new category",
+					"description": null,
+				}
+
+RESPONSE		201 "Created"
+				Location: /api/categories/1002
+
+-------------------------------
+
+during an update operation on the APIs, if the user updates an Category, submitting a request:
+
+REQUEST:
+
+	PUT https://localhost:7123/api/Categories/1002
+	{
+		"categoryId": 1002,
+		"name": "abs",
+		"description": null,
+		"rowVersion": "AAAAAAAARlE="
+	}
+
+There can be two types of responses for 409 - and both have the same shape!  Only the message in the "detail" differs.
+
+
+RESPONSE #1:
+	409 "Conflict"
+	application/problem+json
+	{
+	  "title": "Conflict",
+	  "status": 409,
+	  "detail": "Another category with name 'abs' already exists.",
+	  "instance": "/api/Categories/1002"
+	}
+
+
+RESPONSE #2:
+	409 "Conflict"
+	application/problem+json
+	{
+	  "title": "Conflict",
+	  "status": 409,
+	  "detail": "The record was modified by another user. Please reload and try again.",
+	  "instance": "/api/Categories/1002"
+	}
+	
+The client has to be able to differentiate the two responses, and address it perfectly!
+
+Solution: 
+	409 "Conflict" 				(for duplicate name, business rules validation, etc.) + "detail" => errorCode: "Conflict"
+	412 "Precondition Failed" 	(for concurrency) 									  + "detail" => errorCode: "Concurrency"
+	
+
+AFTER RESOLUTION:
+
+409 "Conflict"
+{
+  "title": "Conflict",
+  "status": 409,
+  "detail": "Another category with name 'abs' already exists.",
+  "instance": "/api/Categories/1002",
+  "errorCode": "Conflict"
+}
+
+
+412 "Precondition Failed"
+{
+  "title": "Concurrency",
+  "status": 412,
+  "detail": "The record was modified by another user. Please reload and try again.",
+  "instance": "/api/Categories/2",
+  "errorCode": "Concurrency"
+}
