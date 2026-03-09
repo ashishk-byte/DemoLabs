@@ -44,6 +44,9 @@ public abstract class BaseApiController : ControllerBase
             ResultStatus.NotFound 
                 => NotFound(CreateProblemDetails(result)),
 
+            ResultStatus.Concurrency
+                => StatusCode(StatusCodes.Status412PreconditionFailed, CreateProblemDetails(result)),
+ 
             ResultStatus.Conflict 
                 => Conflict(CreateProblemDetails(result)),
 
@@ -97,6 +100,13 @@ public abstract class BaseApiController : ControllerBase
             ResultStatus.NotFound =>
                 NotFound(CreateProblemDetails(result)),
 
+            ResultStatus.Concurrency
+                => StatusCode(StatusCodes.Status412PreconditionFailed,
+                    CreateProblemDetails(
+                        result: result,
+                        title: "Concurrency conflict",
+                        detail: "The information was modified by another user. Please reload and try again.")),
+
             ResultStatus.Conflict =>
                 Conflict(CreateProblemDetails(result)),
 
@@ -134,13 +144,26 @@ public abstract class BaseApiController : ControllerBase
     {
         var error = result.Errors.FirstOrDefault();
 
-        return new ProblemDetails
+        var problem = new ProblemDetails
         {
             Title = title ?? error?.Code ?? "Error",
             Detail = detail ?? error?.Message,
             Status = MapStatusCode(result.Status),
             Instance = HttpContext.Request.Path
         };
+
+        // attach "errorCode" as extension to the Problem details, if available, for better client-side handling
+        if (error is not null)
+        {
+            problem.Extensions["errorCode"] = error.Code; 
+        }
+
+        // Add CorrelationId
+        problem.Extensions["correlationId"] 
+            = HttpContext.Items["CorrelationId"]?.ToString()
+                ?? HttpContext.TraceIdentifier;
+
+        return problem;
     }
 
 
@@ -218,6 +241,7 @@ public abstract class BaseApiController : ControllerBase
         status switch
         {
             ResultStatus.NotFound           => StatusCodes.Status404NotFound,
+            ResultStatus.Concurrency        => StatusCodes.Status412PreconditionFailed,
             ResultStatus.Conflict           => StatusCodes.Status409Conflict,
             ResultStatus.ValidationError    => StatusCodes.Status400BadRequest,
             ResultStatus.Unauthorized       => StatusCodes.Status401Unauthorized,

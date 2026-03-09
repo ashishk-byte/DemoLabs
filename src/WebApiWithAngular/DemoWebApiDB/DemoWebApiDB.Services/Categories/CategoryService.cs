@@ -336,7 +336,7 @@ public sealed class CategoryService
                 "Category update concurrency conflict. CategoryId: {CategoryId}",
                 routeId);
 
-            return Result.Conflict(
+            return Result.Concurrency(
                 "The record was modified by another user. Please reload and try again.");
         }
 

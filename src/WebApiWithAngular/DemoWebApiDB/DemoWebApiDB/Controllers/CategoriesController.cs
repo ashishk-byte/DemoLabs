@@ -153,7 +153,8 @@ public sealed class CategoriesController : BaseApiController
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]               // errorCode: "Conflict"
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status412PreconditionFailed)]     // errorCode: "Concurency"
     public async Task<IActionResult> UpdateCategory(
         int id,
         [FromBody] CategoryUpdateDto dto)

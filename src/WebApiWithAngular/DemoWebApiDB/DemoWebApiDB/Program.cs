@@ -3,6 +3,7 @@ using DemoWebApiDB.Services.Products;
 using Scalar.AspNetCore;
 using Serilog;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using DemoWebApiDB.Infrastructure.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -121,10 +122,10 @@ if( !string.IsNullOrEmpty(angularDevServer )
         options.AddPolicy(angularCorsPolicyName, policy =>
         {
             policy
-                .WithOrigins(angularDevServer)
+                .WithOrigins(angularDevServer)      // OR .AllowAnyOrigin()
                 .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();                        // Needed for auth scenarios
+                .AllowAnyMethod()                   // OR .WithMethods("GET", "PUT", "POST", "DELETE", "PATCH")
+                .AllowCredentials();                // Needed for auth scenarios
         });
     });
 }
@@ -158,10 +159,6 @@ if (app.Environment.IsDevelopment())
     });
 
 
-    // Add Serilog Request Logging
-    app.UseSerilogRequestLogging();
-
-
     // Add the registered CORS policy Middleware.
     // NOTE: must come before app.UseAuthorization() and app.MapControllers()
     if (!string.IsNullOrEmpty(angularDevServer)
@@ -171,6 +168,18 @@ if (app.Environment.IsDevelopment())
     }
 
 }
+
+
+// Register the CorrelationId middleware to ensure correlation IDs are included in logs and responses
+// Ensure that it is registered before the Serilog Request Logging middleware to capture correlation IDs in logs.
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+
+// Add Serilog Request Logging
+// Ensure that it is registered before the Https Redirection and Authorization middleware
+// to capture all requests in logs, including failed ones.
+app.UseSerilogRequestLogging();
+
 
 app.UseHttpsRedirection();
 
