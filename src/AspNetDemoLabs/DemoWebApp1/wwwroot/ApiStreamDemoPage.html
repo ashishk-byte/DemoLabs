@@ -46,15 +46,15 @@
 
         <div class="container">
             <p>
-                This demo calls the <b>GetHelloStream()</b> method <br />
+                This demo calls the <b>GetStream()</b> method <br />
                 in the <b>Demo</b> Controller<br />
                 of the <b>DemoWebApp1.Api</b> project.
             </p>
             <p>
-                https://localhost:7140/api/demo/gethello
+                https://localhost:7140/api/demo/GetStream
             </p>
             <p>
-                <button class="btn btn-primary" onclick="callApi()">Call the GetData() API endpoint</button>
+                <button class="btn btn-primary" onclick="callApi()">Call the GetStream() API endpoint</button>
             </p>
 
             <b>RESPONSE FROM API:</b>
@@ -131,7 +131,7 @@
 
 
             // To keep track of length of content recieved from the API
-            let lastLength = 0;
+            let lastLength;
 
 
             /**
@@ -144,6 +144,7 @@
                 switch (xhr.readyState) {
                     case 0:
                         log("0 → UNSENT : Request not initialized");
+                        lastLength = 0;
                         break;
 
                     case 1:
@@ -160,6 +161,7 @@
                         // Show the partial response as and when it arrives!
                         const responseData = xhr.responseText;
                         if (responseData.length !== lastLength) {
+                            log("Received : " + responseData);
                             console.log("Received more data.  Length = " + responseData.length);
                             document.getElementById('responseText').innerHTML = xhr.responseText;
                             lastLength = responseData.length;
@@ -196,17 +198,19 @@
 
                 const responseData = xhr.responseText;
 
-                if(responseData.length !== lastLength) {
-                    log("Received more data.  Length = " + responseData.length);
+                if (responseData.length !== lastLength) {
+                    log("Received more data: " + responseData + ", Length = " + responseData.length);
                     document.getElementById('responseText').innerHTML = xhr.responseText;
                     lastLength = responseData.length;
                 }
+
             };
+
 
             // Configure the request.
             xhr.open(
                 "GET",                                              // HTTP Verb
-                "https://localhost:7140/api/demo/gethellostream",   // API endpoint
+                "https://localhost:7140/api/demo/getstream",        // API endpoint
                 true                                                // async?
             );
 

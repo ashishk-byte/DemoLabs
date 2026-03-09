@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace DemoWebApp1.Api.Controllers;
 
@@ -32,63 +33,17 @@ public class DemoController : ControllerBase
     }
 
 
-
-    /// <summary>
-    ///     Streams a greeting message slowly to demonstrate incremental data arrival in XMLHttpRequest.
-    /// </summary>
-    /// <remarks>
-    ///     Each chunk is sent with a delay so that the browser fires 
-    ///         readyState == 3 
-    ///     repeatedly while receiving data.
-    /// </remarks>
-    /// <returns>
-    ///     A streamed text response.
-    /// </returns>
-    [HttpGet("GetHelloStream")]
-    public async Task GetHelloStream()
+    [HttpGet("GetStream")]
+    public async IAsyncEnumerable<string> GetStream()
     {
-        
-        // Defines the Content Type of the Response from the API endpoint.
-        Response.ContentType = "text/plain";
+        string[] data = { "Hello", "from", ".NET 8", "Async", "Streams!" };
 
-        // IMPORTANT: Disable Caching and Buffering so that the streamed content can be sent immediately!
-        Response.Headers.Append("Cache-Control", "no-cache");
-        Response.Headers.Append("X-Accel-Buffering", "no");
-
-
-        // IMPORTANT: Ensure that response streaming starts immediately!
-        await Response.StartAsync();
-
-        var parts = new[]
+        foreach (var item in data)
         {
-            "Hello",
-            " ",
-            "world",
-            " ",
-            "from",
-            " ",
-            ".NET",
-            " ",
-            "streaming",
-            " ",
-            "API!"
-        };
-
-        foreach (var part in parts)
-        {
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(part);
-
-            // Write the chunk
-            await Response.Body.WriteAsync(bytes, 0, bytes.Length);
-
-            // Immediately send it to the client
-            await Response.Body.FlushAsync();
-
-            // Create an artificial delay so the client will see incremental loading.
-            // So, when the next chunk is sent, the XHR object raises the event setting its readystate to 3.
-            await Task.Delay(3000);
+            // Simulate asynchronous work (e.g., database or external API call)
+            await Task.Delay(2000);
+            yield return item;          // Streams the item immediately
         }
-    
     }
 
 }

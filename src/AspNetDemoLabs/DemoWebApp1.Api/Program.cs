@@ -6,6 +6,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+
 // Register the CORS POLICY
 const string CORSPolicyName = "AllowXhrDemo";
 

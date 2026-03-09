@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css" />
+
+    <style>
+
+        h3 {
+            border-bottom: 2px solid #ccc;
+        }
+
+        #log {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background: #f9f9f9;
+            min-height: 120px;
+        }
+
+        .state {
+            margin: 4px 0;
+        }
+
+        .response {
+            margin-top: 12px;
+            font-weight: bold;
+            color: darkgreen;
+        }
+
+        .loading {
+            margin-top: 12px;
+            color: #aa5500;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container-fluid">
+
+        <h1>XMLHttpRequest lifecycle demo</h1>
+        <hr />
+
+        <div class="container">
+            <p>
+                This demo calls the <b>GetStream()</b> method <br />
+                in the <b>Demo</b> Controller<br />
+                of the <b>DemoWebApp1.Api</b> project
+            </p>
+            <p>
+                https://localhost:7140/api/demo/getstream
+            </p>
+            <p><b>And demonstrates use of FETCH</b></p>
+            <p>
+                <button class="btn btn-primary" onclick="callApi()">Call the GetStream() API endpoint</button>
+            </p>
+
+            <b>RESPONSE FROM API:</b>
+            <div id="responseText"></div>
+
+            <h3>LOG</h3>
+            <div id="log"></div>
+
+            <hr />
+            <b>NOTE:</b>
+            <ul>
+                <li>
+                    Check out the CORS Policy configuration in the <b>Program.cs</b> file of the API project.
+                </li>
+                <li>
+                    The API endpoint is configured for a delay of 3 seconds.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <script>
+
+        /**
+         * Writes a message into the log container.
+         * @param {string} message Message to display.
+         */
+        function log(message) {
+            const logDiv = document.getElementById("log");
+
+            const line = document.createElement("div");
+            line.className = "state";
+            line.textContent = message;
+
+            logDiv.appendChild(line);
+        }
+
+
+        async function getResponseText() {
+
+            try {
+                const response = await fetch("https://localhost:7140/api/demo/getstream");
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                let isCompleted = false;
+                while (!isCompleted) {
+
+                    // Read the next chunk from the stream
+                    const { value, done } = await reader.read();
+
+                    if (done) {
+                        isCompleted = true;
+                    } else {
+                        const chunkText = decoder.decode(value, { stream: true });
+                        log(chunkText);
+                    }
+                }
+            }
+            catch (error) {
+                log("Error: " + error.message);
+            }
+        }
+
+
+        /**
+         * Demonstrates fetch.
+         * The API intentionally delays the response, to help observe the change in readyState.
+         */
+        function callApi() {
+
+            document.getElementById("log").innerHTML = '';
+            document.getElementById('responseText').innerHTML = '';
+
+            getResponseText();
+        }
+
+    </script>
+</body>
+</html>
