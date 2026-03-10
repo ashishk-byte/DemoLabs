@@ -4,6 +4,8 @@ using Scalar.AspNetCore;
 using Serilog;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using DemoWebApiDB.Infrastructure.Middleware;
+using DemoWebApiDB.Auth.Entities;
+using Microsoft.AspNetCore.Identity;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +34,26 @@ if( ! builder.Environment.IsEnvironment("Testing") )
 
 }
 
+
+builder.Services
+    .AddDataProtection();
+
+builder.Services
+    .AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 6;
+    }
+    )
+    .AddRoles<ApplicationRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+
+
 // 3. Register Controllers
 //    Ensure Content Negotiation and Serialization Support for XML and JSON 
 builder.Services
@@ -55,9 +77,11 @@ builder.Services
         options.JsonSerializerOptions.UnmappedMemberHandling
             = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow;
     });
-    // NOTE: I am not enabling support for XML serialization since most productino APIs support JSON only.
-    //       return 406 "Not Acceptable" for unsupported formats, including XML.
-    // .AddXmlSerializerFormatters();               // Remove support for XML serialization
+// NOTE: I am not enabling support for XML serialization since most productino APIs support JSON only.
+//       return 406 "Not Acceptable" for unsupported formats, including XML.
+// .AddXmlSerializerFormatters();               // Remove support for XML serialization
+
+
 
 
 // 4. Register OpenAPI Support.  For more info: https://aka.ms/aspnet/openapi
@@ -186,5 +210,14 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var dbcontext = services.GetRequiredService<ApplicationDbContext>();
+    var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    await IdentitySeeder.SeedAsync(dbcontext, roleManager, userManager);
+}
 
 app.Run();

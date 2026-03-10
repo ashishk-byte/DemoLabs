@@ -1,4 +1,6 @@
-﻿namespace DemoWebApiDB.Data.Data;
+﻿using DemoWebApiDB.Auth.Entities;
+
+namespace DemoWebApiDB.Data.Data;
 
 
 /// <summary>
@@ -8,8 +10,11 @@
 /// <remarks>
 ///     This DataContext class is configured to provide support to work with SQLite (used for "Testing" Environment)
 /// </remarks>
+/// 
+
+
 public class ApplicationDbContext
-    : IdentityDbContext
+    : IdentityDbContext<ApplicationUser, ApplicationRole, string>
 {
 
     /// <summary>
@@ -25,6 +30,9 @@ public class ApplicationDbContext
         => Database.ProviderName?.Contains("SqlServer") == true;        // used by all other Environments
 
 
+
+    public DbSet<Permission> Permissions { get; set; }       // for seeding permissions to the database, used by "Testing" Environment
+    public DbSet<RolePermission> RolePermissions { get; set; }       // for seeding role-permission relationships to the database, used by "Testing" Environment
 
     // Register the models to be exposed as properties from the DataContext
     public DbSet<Category> Categories { get; set; }
@@ -55,6 +63,23 @@ public class ApplicationDbContext
         DefineSqliteRowVersionPolicy(modelBuilder);
 
         //----------- Check Constraints
+        modelBuilder.Entity<RolePermission>()
+            .HasKey(x => new { x.RoleId, x.PermissionId });
+
+
+        modelBuilder.Entity<RolePermission>()
+            .HasOne(x => x.Role)
+            .WithMany()
+            .HasForeignKey(x => x.RoleId);
+
+        modelBuilder.Entity<RolePermission>()
+            .HasOne(x => x.Permission)
+            .WithMany(p => p.RolePermissions)
+            .HasForeignKey(x => x.PermissionId);
+        
+
+
+
 
         if (IsSqlServer)
         {
