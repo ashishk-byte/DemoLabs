@@ -393,7 +393,7 @@ public sealed class ProductService
                 "Product update concurrency conflict. ProductId: {ProductId}",
                 routeId);
 
-            return Result.Conflict(
+            return Result.Concurrency(
                 "The record was modified by another user. Please reload and try again.");
         }
 

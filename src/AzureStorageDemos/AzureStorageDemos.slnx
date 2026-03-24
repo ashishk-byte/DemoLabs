@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Readme.md" />
+  </Folder>
+  <Project Path="ClassLibrary1/ClassLibrary1.csproj" Id="5233f740-a2de-46a4-9c8a-112f5c5993c6" />
+  <Project Path="FunctionApp1/FunctionApp1.csproj" Id="6712afb6-d557-4634-a3f2-dcc29a4d5f03" />
+  <Project Path="WebApplication1/WebApplication1.csproj" />
+</Solution>

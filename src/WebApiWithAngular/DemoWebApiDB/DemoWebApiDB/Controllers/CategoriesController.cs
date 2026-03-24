@@ -1,7 +1,10 @@
 ﻿using DemoWebApiDB.DtoModels.Categories;
 using DemoWebApiDB.DtoModels.ReadModels.Reports;
+using DemoWebApiDB.Infrastructure.Constants;
 using DemoWebApiDB.Infrastructure.Results;
 using DemoWebApiDB.Services.Categories;
+
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace DemoWebApiDB.Controllers;
@@ -20,6 +23,7 @@ namespace DemoWebApiDB.Controllers;
 ///     
 /// TODO: handle paginated result in the GET ALL action method.
 /// </remarks>
+[Authorize(Roles = "Admin")]
 [Route("api/[controller]")]
 public sealed class CategoriesController : BaseApiController
 {
@@ -53,6 +57,7 @@ public sealed class CategoriesController : BaseApiController
     /// </remarks>
     /// <param name="dto">Category creation data.</param>
     /// <returns>201 Created with Location header.</returns>
+    [Authorize(Policy = Permissions.CanAddCategory)]
     [HttpPost]
     [EndpointSummary("Create new Category")]
     [EndpointDescription(
@@ -143,6 +148,7 @@ public sealed class CategoriesController : BaseApiController
     /// <param name="id">Category identifier.</param>
     /// <param name="dto">Updated category data.</param>
     /// <returns>Update result.</returns>
+    [Authorize(Policy = Permissions.CanEditCategory)]
     [HttpPut("{id:int}")]
     [EndpointSummary("Update an existing Category")]
     [EndpointDescription(
@@ -183,6 +189,7 @@ public sealed class CategoriesController : BaseApiController
     /// <param name="id">Category identifier.</param>
     /// <param name="dto">Delete request payload containing RowVersion.</param>
     /// <returns>NoContent on success.</returns>
+    [Authorize(Policy = Permissions.CanDeleteCategory)]
     [HttpDelete("{id:int}")]
     [EndpointSummary("Delete existing Category")]
     [EndpointDescription(

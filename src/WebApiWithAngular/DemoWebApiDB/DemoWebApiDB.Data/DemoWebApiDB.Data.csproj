@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DemoWebApiDB.DtoModels\DemoWebApiDB.DtoModels.csproj" />
+    <ProjectReference Include="..\DemoWebApiDB.Infrastructure\DemoWebApiDB.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

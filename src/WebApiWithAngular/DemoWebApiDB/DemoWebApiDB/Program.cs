@@ -1,11 +1,20 @@
+using System.Text;
+
+using DemoWebApiDB.Auth.Handlers;
+using DemoWebApiDB.Auth.Policies;
+using DemoWebApiDB.Auth.Services;
+using DemoWebApiDB.Infrastructure.Middleware;
 using DemoWebApiDB.Services.Categories;
 using DemoWebApiDB.Services.Products;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.IdentityModel.Tokens;
+
 using Scalar.AspNetCore;
 using Serilog;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using DemoWebApiDB.Infrastructure.Middleware;
-using DemoWebApiDB.Auth.Entities;
-using Microsoft.AspNetCore.Identity;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,28 +43,34 @@ if( ! builder.Environment.IsEnvironment("Testing") )
 
 }
 
-
+// 3. Register the DataProtection Services into the DI Container
+//    (needed for Identity Services token providers, such as password reset tokens, email confirmation tokens, etc.)
 builder.Services
     .AddDataProtection();
 
+
+// 4. Register the Identity Services into the DI Container
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {
+        // Configure password requirements for development/testing purposes
         options.Password.RequireDigit = false;
-        options.Password.RequireLowercase = false;
-        options.Password.RequireUppercase = false;
-        options.Password.RequireNonAlphanumeric = false;
         options.Password.RequiredLength = 6;
-    }
-    )
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireLowercase = false;
+    })
     .AddRoles<ApplicationRole>()
+    .AddSignInManager()                                         // to enable authentication redirect for the LOGIN page.
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// 5. Register JWT Authentication Services into the DI Container
+RegisterJwtAuthentication(builder.Services, builder.Configuration);
 
 
-// 3. Register Controllers
-//    Ensure Content Negotiation and Serialization Support for XML and JSON 
+// 6. Register Controllers
+//    Ensure Content Negotiation and Serialization Support for XML and JSON
 builder.Services
     .AddControllers(options =>
     {
@@ -84,16 +99,16 @@ builder.Services
 
 
 
-// 4. Register OpenAPI Support.  For more info: https://aka.ms/aspnet/openapi
+// 7. Register OpenAPI Support.  For more info: https://aka.ms/aspnet/openapi
 builder.Services
     .AddOpenApi();
 
 
-// 5. Register automatic model validation support with RFC7807 ProblemDetails response
+// 8. Register automatic model validation support with RFC7807 ProblemDetails response
 builder.Services
     .Configure<ApiBehaviorOptions>(options =>
     {
-        options.InvalidModelStateResponseFactory 
+        options.InvalidModelStateResponseFactory
             = context =>
             {
                 var problemDetails = new ValidationProblemDetails(context.ModelState)
@@ -102,7 +117,6 @@ builder.Services
                     Title = "Validation failed",
                     Detail = "One or more validation errors occurred.",
                     Instance = context.HttpContext.Request.Path,
-                    // TODO: Add TraceId and CoRelationId support to the ValidationProblemDetails model in future.
                 };
 
                 return new BadRequestObjectResult(problemDetails);
@@ -110,18 +124,23 @@ builder.Services
     });
 
 
-// 6. Register support for ProblemDetails for failed requests to the DI Container
+// 9. Register support for ProblemDetails for failed requests to the DI Container
 builder.Services
     .AddProblemDetails();
 
 
-// 7. Register application services to the DI Container
+// 10. Register application services to the DI Container
+
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<ProductService>();
 
 
-// 8. Register the Serilog Service
+// 11. Register the Serilog Service
 //    (a) Add the ScalarApiReference middleware to read OpenAPI documentation
 //    (b) Add the CorrelationId middleware before adding the ScalarApiReference middleware
 Log.Logger = new LoggerConfiguration()
@@ -132,13 +151,13 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 
-// 9. Configure CORS Policy support needed for Angular Project
+// 12. Configure CORS Policy support needed for Angular Project
 //    And enable the registered policy by adding the Middleware.
-string? angularDevServer 
+string? angularDevServer
     = builder.Configuration.GetValue<string>("MyAppSettings:AngularDevServer");
 string? angularCorsPolicyName
     = builder.Configuration.GetValue<string>("MyAppSettings:AngularCORSPolicyName");
-if( !string.IsNullOrEmpty(angularDevServer ) 
+if( !string.IsNullOrEmpty(angularDevServer )
     &&  !string.IsNullOrEmpty(angularCorsPolicyName ) )
 {
     builder.Services.AddCors(options =>
@@ -154,6 +173,16 @@ if( !string.IsNullOrEmpty(angularDevServer )
     });
 }
 
+
+// 13. Add Razor Pages support (needed for Identity UI pages)
+builder.Services.AddRazorPages( options =>
+{
+    // --- To temporarily disable authentication & authorization to the "ADMIN" folder, uncomment below lines!
+    // if (builder.Environment.IsDevelopment())
+    // {
+    //     options.Conventions.AllowAnonymousToFolder("/Admin");
+    // }
+});
 
 
 var app = builder.Build();
@@ -207,9 +236,28 @@ app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
+
+app.UseAuthentication();
+
 app.UseAuthorization();
 
-app.MapControllers();
+
+app.MapControllers();             // Maps API controller endpoints
+
+app.MapRazorPages();              // Maps Razor Pages endpoints for the admin UI
+
+
+// Call the IdentitySeeder to seed the database with initial data (permissions, roles, admin user)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
+    var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+    await IdentitySeeder.SeedAsync(dbContext, roleManager, userManager);
+}
 
 using (var scope = app.Services.CreateScope())
 {
@@ -221,3 +269,53 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+
+
+void RegisterJwtAuthentication(
+    IServiceCollection services,
+    IConfiguration config)
+{
+    var jwtSection = config.GetSection("Jwt");
+    var jwtKey = jwtSection["SecretKey"];
+
+
+
+    services
+        .AddAuthentication(options =>
+        {
+            // NOTE: Setting Cookies as the default challenge scheme for authentication middleware.
+            // options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            // options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+            options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+            options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+        })
+        // enable Cookie Authentication for ASP.NET Razor Admin Pages
+        .AddCookie(IdentityConstants.ApplicationScheme, options =>
+        {
+            options.LoginPath = "/Account/Login";
+            options.AccessDeniedPath = "/Account/AccessDenied";
+            options.SlidingExpiration = true;
+        })
+        // enable and configure JWT Bearer Token authentication for the API endpoints
+        // NOTE: needs all API endpoints to explicitly require JWT Bearer Authentication Scheme.
+        //       This is done in the BaseApiController, by adding the [Authorize] attribute with the scheme definition.
+        //       And allowing "Anonymous" access to the LOGIN api endpoint in the AuthController.
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer = jwtSection["Issuer"],
+                ValidAudience = jwtSection["Audience"],
+
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
+            };
+        });
+
+}

@@ -1,0 +1,48 @@
+﻿@using WebApplication1.DtoModels
+
+@model IEnumerable<BlobImageItemDto>
+
+
+<div class="container mt-4">
+
+    <h2>Blob Storage - Image Gallery</h2>
+
+    <div class="row">
+        @foreach (var blob in Model)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm">
+                    
+                    <div style="height:200px; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">
+                        <img src="@Url.Action("GetImage", "StudentImages", new { fileName = blob.FileName })"
+                             style="max-height:100%; max-width:100%;" />
+                    </div>
+
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate" title="@blob.FileName">@blob.FileName</h6>
+
+                        <p class="card-text small text-muted">
+                            Uploaded on:
+                            @(blob.UploadedOn?.ToString("dd-MMM-yyyy HH:mm") ?? "N/A")
+                            <br />
+                            Size: 
+                            @(blob.Size.ToString() + " bytes" ?? "N/A")
+                        </p>
+
+                        <a href="@Url.Action(action: "GetImage", controller: "StudentImages", new { fileName = blob.FileName })"
+                               target="_blank"
+                               class="btn btn-sm btn-primary">
+                            View
+                        </a>
+
+                        <a href="@Url.Action(action: "Delete", controller: "StudentImages", new { fileName = blob.FileName })"
+                               class="btn btn-sm btn-danger">
+                            Delete
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        }
+    </div>
+</div>

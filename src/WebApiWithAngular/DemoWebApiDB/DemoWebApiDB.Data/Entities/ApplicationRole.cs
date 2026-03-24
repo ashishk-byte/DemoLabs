@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace DemoWebApiDB.Auth.Entities;
+
+namespace DemoWebApiDB.Data.Entities;
+
 
 public class ApplicationRole : IdentityRole
 {

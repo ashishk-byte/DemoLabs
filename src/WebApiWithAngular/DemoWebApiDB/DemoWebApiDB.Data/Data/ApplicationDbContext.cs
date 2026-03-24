@@ -30,6 +30,10 @@ public class ApplicationDbContext
         => Database.ProviderName?.Contains("SqlServer") == true;        // used by all other Environments
 
 
+    // Register the Identity models to be exposed as properties from the DataContext
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
+
 
     public DbSet<Permission> Permissions { get; set; }       // for seeding permissions to the database, used by "Testing" Environment
     public DbSet<RolePermission> RolePermissions { get; set; }       // for seeding role-permission relationships to the database, used by "Testing" Environment
@@ -60,7 +64,29 @@ public class ApplicationDbContext
                         .OnDelete(DeleteBehavior.Cascade);
          ***********/
 
-        DefineSqliteRowVersionPolicy(modelBuilder);
+        //----------- Define relationships for Identity models
+
+        // Define the Composite Primary Key for RolePermission
+        modelBuilder.Entity<RolePermission>()
+            .HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+        // Define the many-to-many relationship between ApplicationRole and Permission through RolePermission
+        //  ------ a role can have many permissions
+        modelBuilder.Entity<RolePermission>()
+            .HasOne(rp => rp.Role)
+            .WithMany()
+            .HasForeignKey(rp => rp.RoleId);
+        //  ------ a permission can be assigned to many roles
+        modelBuilder.Entity<RolePermission>()
+            .HasOne(rp => rp.Permission)
+            .WithMany(p => p.RolePermissions)
+            .HasForeignKey(rp => rp.PermissionId);
+
+
+        //----------- Define RowVersion policy for both SQL Server and SQLite
+
+        DefineRowVersionPolicy(modelBuilder);
+
 
         //----------- Check Constraints
         modelBuilder.Entity<RolePermission>()
@@ -164,7 +190,7 @@ public class ApplicationDbContext
         }
     }
 
-    private void DefineSqliteRowVersionPolicy(ModelBuilder modelBuilder)
+    private void DefineRowVersionPolicy(ModelBuilder modelBuilder)
     {
         // SQLite cannot auto-generate rowversion
         if (IsSqlite)

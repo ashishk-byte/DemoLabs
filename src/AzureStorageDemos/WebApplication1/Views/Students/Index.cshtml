@@ -1,0 +1,42 @@
+﻿@using WebApplication1.ViewModels;
+
+@model IEnumerable<StudentViewModel>
+
+<div class="container">
+
+    <h2>Azure Table Storage Demo</h2>
+    <h4>List of Students</h4>
+
+    <a asp-action="Create" class="btn btn-primary mb-3">Add Student</a>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th class="col-4">Name</th>
+                <th class="col-5">Email</th>
+                <th class="col-1">Age</th>
+                <th class="col-2"></th>
+            </tr>
+        </thead>
+
+        @foreach (var student in Model)
+        {
+            <tr>
+                <td>@student.Name</td>
+                <td>@student.Email</td>
+                <td>@student.Age</td>
+                <td>
+                    <a asp-action="Edit" asp-route-rowKey="@student.RowKey"
+                       class="btn btn-warning">
+                       Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-rowKey="@student.RowKey"
+                       class="btn btn-danger">
+                       Delete
+                   </a>
+                </td>
+            </tr>
+        }
+    </table>
+
+</div>

@@ -1,0 +1,69 @@
+﻿@using WebApplication1.ViewModels;
+
+@model StudentImageUploadViewModel
+
+<div class="container mt-4">
+    <h2>Azure Blob Storage Demo</h2>
+
+    <div class="row">
+
+        <!-- LEFT: Upload Panel -->
+        <div class="col-md-6">
+            <form method="post" enctype="multipart/form-data">
+                
+                <div class="mb-3">
+                    <label asp-for="ImageFile" class="form-label"></label>
+                    <input asp-for="ImageFile" type="file" class="form-control" 
+                           accept="image/*"
+                           onchange="previewImage(event)" />
+                    <span asp-validation-for="ImageFile" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <img id="preview" class="img-fluid border" 
+                         title="preview before upload" alt="preview image before upload"
+                         style="max-height:300px; display:none;" />
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Upload
+                </button>
+            </form>
+        </div>
+
+        <!-- RIGHT: Result Panel -->
+        <div class="col-md-6">
+            <h5>The uploaded Image from Blob Storage</h5>
+
+            @if (Model.ImageFileName is not null)
+            {
+                <img src="@Url.Action(action: "GetImage", controller: "StudentImages", new { fileName = Model.ImageFileName })"
+                     class="img-fluid border" />
+            }
+            else
+            {
+                <p class="text-muted">
+                    No image uploaded yet.<br />
+                    Try uploading one.
+                </p>
+            }
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                const img = document.getElementById('preview');
+                img.src = reader.result;
+                img.style.display = 'block';
+            };
+
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+}

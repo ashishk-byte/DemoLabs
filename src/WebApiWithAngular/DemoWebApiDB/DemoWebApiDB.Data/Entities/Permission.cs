@@ -1,13 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace DemoWebApiDB.Data.Entities;
 
-namespace DemoWebApiDB.Auth.Entities
+
+public class Permission
 {
-    public class Permission
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
-    }
+
+    public int Id { get; set; }
+
+
+    public string Name { get; set; } = string.Empty;
+
+
+    #region Navigation Properties to the RolePermission
+
+    public ICollection<RolePermission> RolePermissions { get; set; }
+        = [];               // C# 12.0 collection initializer, instead of = new List<RolePermission>();
+
+    #endregion
+
 }

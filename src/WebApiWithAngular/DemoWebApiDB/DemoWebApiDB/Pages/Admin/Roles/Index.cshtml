@@ -1,0 +1,34 @@
+﻿@page
+@model DemoWebApiDB.Pages.Admin.Roles.IndexModel
+
+<div class="container">
+
+    <h4 class="mb-4">List of Roles in the Application</h4>
+
+    <table class="table table-light">
+        <thead class="table-info">
+            <tr>
+                <th>Role Name</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody class="align-middle">
+            @foreach (var role in Model.Roles)
+            {
+                <tr>
+                    <td>
+                        @role.Name
+                    </td>
+                    <td class="text-end me-4">
+                        <a asp-page="Permissions" asp-route-roleId="@role.Id" class="btn btn-outline-secondary">
+                            Manage Permissions
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+</div>

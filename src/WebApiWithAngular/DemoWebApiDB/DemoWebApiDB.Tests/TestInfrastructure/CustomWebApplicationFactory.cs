@@ -53,7 +53,7 @@ public sealed class CustomWebApplicationFactory
             // ----- 2. Create SQLite in-memory connection
             //          Ensure that each instance of the Database created for the test-run has a unique name!
             var dbName = $"TestDB_{Guid.NewGuid()}";
-            var connectionString = $"DataSource={dbName};Mode=memory;Cache=Private";        // Cache=Shared
+            var connectionString = $"DataSource={dbName};Mode=memory;Cache=Shared";
 
             _connection = new SqliteConnection(connectionString);
             _connection.Open();

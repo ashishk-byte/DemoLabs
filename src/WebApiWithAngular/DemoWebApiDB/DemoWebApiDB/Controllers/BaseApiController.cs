@@ -1,5 +1,8 @@
 ﻿using DemoWebApiDB.Infrastructure.Results;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace DemoWebApiDB.Controllers;
 
@@ -17,6 +20,7 @@ namespace DemoWebApiDB.Controllers;
 ///     - Result Pattern aligned consistent API responses
 ///         - Structured and predictable RFC7807 compliant error handling
 /// </remarks>
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ApiController]
 public abstract class BaseApiController : ControllerBase
 {

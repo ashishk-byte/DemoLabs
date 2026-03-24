@@ -1,0 +1,43 @@
+﻿@page
+@model DemoWebApiDB.Pages.Admin.Users.IndexModel
+
+
+<div class="container">
+
+    <h4 class="mb-4">List of Users in the Application</h4>
+
+    <table class="table table-light">
+        <thead class="table-info">
+            <tr>
+                <th class="col-3">Username</th>
+                <th class="col-3">Full Name</th>
+                <th class="col-4">Email</th>
+                <th class="col-2 text-end me-4">
+                    <a asp-page="ManageUser" class="btn btn-primary">
+                        Add User
+                    </a>
+                </th>
+            </tr>
+        </thead>
+
+        <tbody class="align-middle">
+
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td>@user.Username</td>
+                    <td>@user.FullName</td>
+                    <td>@user.Email</td>
+                    <td class="text-end me-4">
+                        <a class="btn btn-secondary" 
+                           asp-page="ManageUser" asp-route-id="@user.Id">
+                            Edit User
+                        </a>
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+
+</div>

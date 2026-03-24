@@ -1,0 +1,40 @@
+﻿@using WebApplication1.ViewModels;
+
+@model StudentViewModel
+
+<div class="container">
+    <h2>@(Model.RowKey == null ? "Create" : "Edit") Student</h2>
+
+    <form method="post">
+
+        <input type="hidden" asp-for="RowKey" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+        <div class="mb-4">
+            <label asp-for="Name" class="form-label">Name</label>
+            <input asp-for="Name" class="form-control" placeholder="enter name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" class="form-control" placeholder="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Age" class="form-label">Age</label>
+            <input asp-for="Age" class="form-control" placeholder="age" />
+            <span asp-validation-for="Age" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+            Save
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            Cancel
+        </a>
+
+    </form>
+
+</div>
