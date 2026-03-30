@@ -8,6 +8,7 @@ namespace WebApplication1.Services;
 
 public class MyImagesBlobClientService
 {
+
     private readonly BlobContainerClient _container;
 
 
@@ -19,6 +20,9 @@ public class MyImagesBlobClientService
         var client = new BlobServiceClient(conn);
         _container = client.GetBlobContainerClient(containerName);
 
+
+        // _container.CreateIfNotExists();
+        // _container.SetAccessPolicy(PublicAccessType.Blob);
         _container.CreateIfNotExists(PublicAccessType.Blob);
     }
 

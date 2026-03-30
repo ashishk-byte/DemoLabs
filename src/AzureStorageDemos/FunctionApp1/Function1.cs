@@ -14,6 +14,9 @@ namespace FunctionApp1;
 
 public class Function1
 {
+
+    private const string QueueNAME = "manoj-queue";
+
     private readonly ILogger<Function1> _logger;
     private readonly IConfiguration _config;
 
@@ -29,7 +32,7 @@ public class Function1
 
     [Function(name: "ProcessImage")]
     public async Task Run(
-        [QueueTrigger("image-queue", Connection = "AzureWebJobsStorage")] QueueMessage message,
+        [QueueTrigger(QueueNAME, Connection = "AzureWebJobsStorage")] QueueMessage message,
         FunctionContext context,
         int dequeueCount)
     {

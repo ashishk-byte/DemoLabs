@@ -24,6 +24,7 @@ public class StudentImagesController : Controller
     {
         var vm = new StudentImageUploadViewModel();
 
+        // return View (viewName: "Index", model: vm);
         return View(vm);
     }
 
@@ -33,6 +34,7 @@ public class StudentImagesController : Controller
     {
         if(! ModelState.IsValid)
         {
+            // return View (viewName: "Index", model: vm);
             return View(vm);
         }
 
@@ -42,6 +44,8 @@ public class StudentImagesController : Controller
         await _queueService.SendMessageAsync(imageFileName);
 
         vm.ImageFileName = imageFileName;
+
+        // return View (viewName: "Index", model: vm);
         return View(vm);
     }
 
@@ -59,6 +63,8 @@ public class StudentImagesController : Controller
     public async Task<IActionResult> List()
     {
         var blobItems = await _blobService.GetAllAsync();
+
+        // return View (viewName: "Index", model: blobItems);
         return View(blobItems);
     }
 
